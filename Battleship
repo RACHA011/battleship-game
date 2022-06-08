@@ -1,0 +1,531 @@
+//package battleship;
+import java.util.*;
+
+@SuppressWarnings("serial")
+class TooCloseException extends RuntimeException{
+	public TooCloseException(String s) {
+		super(s);
+	}
+}
+
+abstract class Game{
+	final String[] ship = {
+			"Destroyer", "Cruiser",
+			"Submarine", "Battleship",
+			"Aircraft Carrier"};
+	final static int t = 21;
+	final static int l = 11;
+	static String[][] arr = new String[l][t];
+	static String[][] shown = new String[l][t];
+	static String[][] arr1 = new String[l][t];
+	static String[][] shown1 = new String[l][t];
+	static ArrayList<String> list = new ArrayList<>();
+	static ArrayList<String> lists = new ArrayList<>();
+	
+	public Game() {
+		createArray(arr);
+		createArray(shown);
+		createArray(arr1);
+		createArray(shown1);
+	}
+	
+	protected void createArray(String[][] arrs) {
+    	int x = 1;
+    	int y = 64;
+        for (int i = 0; i < l; i++) {
+            for (int j = 0; j < t; j++) {
+                if (j % 2 != 0) {
+                	arrs[i][j] = " ";
+                } else {
+                	arrs[i][j] = "~";
+                }
+                if (i == 0 && j % 2 == 0 && j > 0) {
+                	arrs[i][j] = String.valueOf(x);
+                	x++;
+                } else if (j == 0) {
+                	arrs[i][j] = String.valueOf((char)y);
+                	y++;
+                } 
+            }
+        }
+        arrs[0][0] = " ";
+        
+    } 
+	
+	protected void player() {
+		//change the player
+		
+		String[][] tempArr = arr;
+		arr = arr1;
+		arr1 = tempArr;
+		
+		String[][] tempShown = shown;
+		shown = shown1;
+		shown1 = tempShown;
+	}
+	
+	protected boolean shipSink() {
+    	
+    	for (int j = 0;j < list.size(); j++) {
+    		String[] start = list.get(j).split(" ");
+    		String[] end = lists.get(j).split(" ");
+    		int count = 0;
+    		
+    		if (start[0].equals(end[0])) {
+    			if (Integer.parseInt(end[1]) < Integer.parseInt(start[1])) {
+        			String temp = end[1];
+        			end[1] = start[1];
+        			start[1] = temp;
+        		}
+        		for (int i = Integer.parseInt(start[1]); i < Integer.parseInt(end[1]) + 1; i += 2) {
+        			if ("X".equals(arr[Integer.parseInt(start[0])][i])) {
+        				count++;
+        			}
+        		}
+        		if (Integer.parseInt(end[1]) - Integer.parseInt(start[1]) == count * 2 - 2) {
+        			list.remove(j);
+    				lists.remove(j);
+        			return true;
+        		}
+    		} else if (start[1].equals(end[1])){
+    			if (Integer.parseInt(end[0]) < Integer.parseInt(start[0])) {
+    	    		String temp = end[0];
+    	    		end[0] = start[0];
+    	    		start[0] = temp;
+    	    	}
+    	    	
+    			for (int i = Integer.parseInt(start[0]); i < Integer.parseInt(end[0]) + 1; i++) {
+	    			if ("X".equals(arr[i][Integer.parseInt(start[1])])) {
+	    				count++;
+	    			}
+	    		}
+    			if (Integer.parseInt(end[0]) - Integer.parseInt(start[0]) == count - 1) {
+    				list.remove(j);
+    				lists.remove(j);
+    				return true;
+        		}
+    		}
+    	}
+		return false;
+    	
+    }
+    
+	protected int col(String i) {
+		if (Integer.parseInt(i) < 11) {
+			return Integer.parseInt(i) * 2;
+		} else {
+			throw new IllegalArgumentException();
+		}
+    	
+    }
+    
+	protected int row(char i) {
+    	switch (i) {
+    	case 'A':
+    		return 1;
+    	case 'B':
+    		return 2;
+    	case 'C':
+    		return 3;
+    	case 'D':
+    		return 4;
+    	case 'E':
+    		return 5;
+    	case 'F':
+    		return 6;
+    	case 'G':
+    		return 7;
+    	case 'H':
+    		return 8;
+    	case 'I':
+    		return 9;
+    	case 'J':
+    		return 10;
+    	default:
+    		throw new IllegalArgumentException();
+    	}
+    }
+    
+	protected void firstPrintArrayThenShoot() {
+    	printArr(shown1);
+		System.out.println("---------------------");
+		printArr(arr);
+    }
+    
+	protected abstract String position(String f);
+    
+	protected abstract int move(String f, String s, int x);
+    
+	protected abstract void printArr(String[][] arrs);
+    
+	protected abstract void shoot(String f);
+    
+}
+
+class GameBord extends Game{
+	
+	public GameBord() {
+		super();
+	}
+	
+    protected String[][] getArr() {
+    	return arr;
+    }
+    
+    protected String[][] getShown() {
+    	return shown;
+    }
+    
+    @Override
+    protected void printArr(String[][] arrs) {
+    	for (int i = 0; i < l; i++) {
+            for (int j = 0; j < t; j++) {
+                System.out.print(arrs[i][j]);
+            }
+            System.out.println();
+        }
+    }
+    
+    @Override
+    protected String position(String f) {
+    	char i = f.charAt(0);
+    	String j;
+    	if (f.length() > 2) {
+    		if (f.charAt(2) == ' ') {
+    			j = f.charAt(1) + "";
+    		} else {
+    			j = f.charAt(1) + "" + f.charAt(2);
+    		}
+    		
+    	} else {
+    		j = f.charAt(1) + "";
+    	}
+    	
+    	return row(i) + " " + col(j);
+    }
+
+	protected static boolean gameOver() {
+    	for (int i = 0; i < l; i++) {
+            for (int j = 0; j < t; j++) {
+                if ("O".equals(arr[i][j])) {
+                	return true;
+                }
+            }
+    	}
+    	return false;
+    }
+    
+	protected static boolean gameOver1() {
+    	for (int i = 0; i < l; i++) {
+            for (int j = 0; j < t; j++) {
+                if ("O".equals(arr1[i][j])) {
+                	return true;
+                }
+            }
+    	}
+    	return false;
+    }
+	
+    //CHECKED ALL THECONDITIONS
+    private static boolean verticallyClose(String[] start, String[] end) {
+    	if (Integer.parseInt(end[0]) != 10) {
+    		if ("O".equals(arr[Integer.parseInt(start[0]) - 1][Integer.parseInt(start[1])]) || "O".equals(arr[Integer.parseInt(end[0]) + 1][Integer.parseInt(start[1])])) {
+        		return true;
+        	}
+    	} else if (Integer.parseInt(end[0]) == 10) {
+    		if ("O".equals(arr[Integer.parseInt(start[0]) - 1][Integer.parseInt(start[1])])) {
+    			return true;
+    		}
+    	}
+    	
+    	for (int i = Integer.parseInt(start[0]); i < Integer.parseInt(end[0]) + 1; i++) {
+			 if (Integer.parseInt(start[1]) != arr[0].length - 1 && "O".equals(arr[i][Integer.parseInt(start[1]) + 2])) {
+				 return true;
+			 } else if ("O".equals(arr[i][Integer.parseInt(start[1]) - 2])) {
+				 return true;
+			 }
+		}
+    	return false;
+    }
+    
+    //STILL CHECKING
+    private static boolean horizontallyClose(String[] start, String[] end) {
+    	
+    	if (Integer.parseInt(end[0]) != arr.length - 1) {
+    		if ("O".equals(arr[Integer.parseInt(start[0])][Integer.parseInt(start[1]) - 2]) || "O".equals(arr[Integer.parseInt(start[0])][Integer.parseInt(end[1]) + 2])) {
+    			return true;
+    		}
+    	} else if (Integer.parseInt(end[0]) == arr.length - 1) {
+    		if ("O".equals(arr[Integer.parseInt(start[0]) - 2][Integer.parseInt(start[1])])) {
+    			return true;
+    		}
+    	}
+    	
+    	for (int i = Integer.parseInt(start[1]); i < Integer.parseInt(end[1]) + 1; i += 2) {
+    		if (Integer.parseInt(start[0]) != arr.length - 1 && "O".equals(arr[Integer.parseInt(start[0]) + 1][i])) {
+				 return true;
+			 } else if ("O".equals(arr[Integer.parseInt(start[0]) - 1][i])) {
+				 return true;
+			 }
+		}
+    	
+    	return false;
+    }
+    
+    @Override
+    protected int move(String f, String s, int x) {
+    	System.out.println();
+    	
+    	String[] start = position(f).split(" ");
+		String[] end = position(s).split(" ");
+		//move horizontally
+		
+		if (f.charAt(0) == s.charAt(0)) {
+    		if (Integer.parseInt(end[1]) < Integer.parseInt(start[1])) {
+    			String temp = end[1];
+    			end[1] = start[1];
+    			start[1] = temp;
+    		} 
+    		
+    		if (!horizontallyClose(start, end)) {
+    			if (x > 2) {
+        			if (Integer.parseInt(end[1]) - Integer.parseInt(start[1]) == x * 2 - 2) {
+            			for (int i = Integer.parseInt(start[1]); i < Integer.parseInt(end[1]) + 1; i += 2) {
+            				arr[Integer.parseInt(start[0])][i] = "O";
+            			}
+            			x--;
+            			printArr(arr);
+            		} else {
+            			throw new IllegalArgumentException();
+            		}
+        		} else {
+        			if (Integer.parseInt(end[1]) - Integer.parseInt(start[1]) == (x + 1) * 2 - 2) {
+            			for (int i = Integer.parseInt(start[1]); i < Integer.parseInt(end[1]) + 1; i += 2) {
+            				arr[Integer.parseInt(start[0])][i] = "O";
+            			}
+            			x--;
+            			printArr(arr);
+            		} else {
+            			throw new IllegalArgumentException();
+            		}
+        		}
+        		
+        		
+    		} else if (horizontallyClose(start, end)) {
+    			throw new TooCloseException("Error! You placed it too close to another one. Try again:");
+    		}
+    		
+    	} else if (f.charAt(1) == s.charAt(1)) {
+	    	//move vertically
+	    	if (Integer.parseInt(end[0]) < Integer.parseInt(start[0])) {
+	    		String temp = end[0];
+	    		end[0] = start[0];
+	    		start[0] = temp;
+	    	}
+	    	
+	    	if (!verticallyClose(start, end)) {
+	    		if (x > 2) {
+		    		if (Integer.parseInt(end[0]) - Integer.parseInt(start[0]) == x - 1) {
+			    		for (int i = Integer.parseInt(start[0]); i < Integer.parseInt(end[0]) + 1; i++) {
+			    			arr[i][Integer.parseInt(start[1])] = "O";
+			    		}
+			    		x--;
+			    		printArr(arr);
+			    	} else {
+			    		throw new IllegalArgumentException();
+			    	}
+			    	
+		    	} else {
+		    		if (Integer.parseInt(end[0]) - Integer.parseInt(start[0]) == x) {
+			    		for (int i = Integer.parseInt(start[0]); i < Integer.parseInt(end[0]) + 1; i++) {
+			    			arr[i][Integer.parseInt(start[1])] = "O";
+			    		}
+			    		x--;
+			    		printArr(arr);
+			    	} else {
+			    		throw new IllegalArgumentException();
+			    	}
+		    	}
+	    	} else if (verticallyClose(start, end)) {
+    			throw new TooCloseException("Error! You placed it too close to another one. Try again:");
+    		}
+	    	
+	    } else {
+	    	//else do not move
+	    	throw new IllegalArgumentException();
+    	}
+		
+		list.add(position(f));
+		lists.add(position(s));
+		
+    	return x;
+    }
+    
+    @Override
+    protected void shoot(String f) {
+    	System.out.println();
+    	String[] pos= position(f).split(" ");
+    	
+    	int row = Integer.parseInt(pos[0]);
+    	int col = Integer.parseInt(pos[1]);
+    	
+    	if ("O".equals(arr[row][col]) || "X".equals(arr[row][col])) {
+    		arr[row][col] = "X";
+    		shown[row][col] = "X";
+    		//print the array first then shoot 
+    		if (GameBord.gameOver() && GameBord.gameOver1()) {
+    			if(shipSink()) {
+        			System.out.println("You sank a ship! Specify a new target:\n");
+        		} else {
+        			System.out.println("You hit a ship!\n");
+        		}
+    		}
+    		
+    		
+    	} else {
+    		arr[row][col] = "M";
+    		shown[row][col] = "M";
+    		//print the array first then shoot
+    		System.out.println("You missed.\n");
+    	}
+    	
+    }
+
+}
+
+public class Main {
+	private static Scanner scanner = new Scanner(System.in);
+    public static void main(String[] args) {
+        // Write your code here
+    	GameBord gb1 = new GameBord();
+    	game(gb1);
+    }
+    
+    protected static void game(GameBord gb1) {
+    	//player 1 start
+    	System.out.println("Player 1, place your ships on the game field\n");
+    	gameStart(gb1);
+    	
+    	System.out.println("\nPress Enter and pass the move to another player");
+
+    	try{System.in.read();}
+        catch(Exception e){}
+    	
+    	//player 2
+    	gb1.player();
+    	System.out.println("Player 2, place your ships on the game field\n");
+    	gameStart(gb1);
+    	gb1.player();
+    	start(gb1);
+    	
+    	scanner.close();
+    	
+
+    }
+    
+    /**
+     * press enter to pass the move to another player
+     * 
+     */
+    private static final void PETC() {
+    	System.out.println("Press Enter and pass the move to another player\n");
+    	try{System.in.read();}
+        catch(Exception e){}
+    	
+    }
+    
+    private static void gameStart(GameBord gb) {
+    	int x = 5;
+    	
+    	gb.printArr(gb.getArr());
+    	while(x >= 1) {
+    		System.out.println();
+    		
+    		if (x > 2) {
+    			System.out.printf("Enter the coordinates of the %s (%d cells):%n%n", gb.ship[x - 1], x);
+    		} else {
+    			System.out.printf("Enter the coordinates of the %s (%d cells):%n%n", gb.ship[x - 1], x + 1);
+    		}
+    		
+    		x = game(x, gb);
+    	}
+    	
+    	
+    }
+    
+    private static void start(GameBord gb1) {
+    	System.out.println();
+    	PETC();
+    	while (true) {
+    		System.out.println();
+    		//print the array first then shoot 
+    		player1(gb1);
+
+    		if (!(GameBord.gameOver() && GameBord.gameOver1())) {
+        		break;
+        	}
+    		PETC();
+    		player2(gb1);
+    		
+    		if (!(GameBord.gameOver() && GameBord.gameOver1())) {
+        		break;
+        	}
+    		PETC();
+    	}
+    	System.out.println("\nYou sank the last ship. You won. Congratulations!");
+    }
+    
+    private static int game(int x, GameBord gb) {
+    	
+    	try {
+    		
+    		String f = scanner.next();
+    		String s = scanner.next();
+    		
+    		x = gb.move(f, s, x);
+    		
+    	} catch (IllegalArgumentException d) {
+    		//IllegalArgumentException
+    		System.out.printf("Error! Wrong length of the %s! Try again:%n", gb.ship[x - 1]);
+    		System.out.println();
+    		x = game(x,gb);
+    	} catch (TooCloseException e) {
+    		System.out.println(e.getMessage() + "\n");
+    		x = game(x,gb);
+    	}
+    	return x;
+    }
+    
+    private static void player1(GameBord gb1) {
+    	try {
+    		
+    		gb1.firstPrintArrayThenShoot();
+    		System.out.println("\nPlayer 1, it's your turn:\n");
+        	
+    		gb1.player();
+        	gb1.shoot(scanner.next());
+    		
+    		
+    		gb1.player();
+    	} catch (IllegalArgumentException e) {
+        	System.out.println("Error! You entered the wrong coordinates! Try again:\n");
+        	player1(gb1);
+        }
+    }
+
+	private static void player2(GameBord gb1) {
+    	try {
+    		gb1.player();
+    		gb1.firstPrintArrayThenShoot();
+    		System.out.println("\nPlayer 2, it's your turn:\n");
+        	
+    		gb1.player();
+        	gb1.shoot(scanner.next());
+    		
+    	} catch (IllegalArgumentException e) {
+        	System.out.println("Error! You entered the wrong coordinates! Try again:\n");
+        	player2(gb1);
+        }
+    }
+    
+}
